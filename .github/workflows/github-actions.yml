@@ -34,7 +34,7 @@ jobs:
         run: sleep 10
 
       - name: Run integration test
-        run: python integration.py
+        run: pytest tests/integration
 
 
       # - name: Run component test
