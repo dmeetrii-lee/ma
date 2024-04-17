@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - "master"
+  workflow_dispatch:
 
 jobs:
   test:
@@ -24,22 +25,27 @@ jobs:
           pip install pytest
           pip install pytest-asyncio
           pip install asyncpg
-          pip install --no-cache-dir --upgrade -r taskmanager_service/requirements.txt
+          pip install --no-cache-dir --upgrade -r messenger_service/requirements.txt
 
       - name: Prepare for tests (compose up)
         run: docker compose up -d --build
 
+      - name: Wait services to start
+        run: sleep 10
+
       - name: Run integration test
-        run: pytest tests/integration
+        run: python integration.py
+
 
       - name: Run component test
-        run: pytest tests/component
+        run: python component.py
+
 
       - name: Clean up (compose down)
         run: docker compose down
 
-  build_and_push_taskmanager_service:
-    name: Build and push taskmanager service to Yandex Cloud
+  build_and_push_messenger_service:
+    name: Build and push messenger service to Yandex Cloud
     runs-on: ubuntu-latest
     needs: [ test ]
     steps:
@@ -47,7 +53,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          cd taskmanager_service && docker build -f Dockerfile . --tag cr.yandex/${{ secrets.YC_REGISTRY_ID }}/ms-taskmanager-services:latest --platform=linux/amd64
+          cd messenger_service && docker build -f Dockerfile . --tag cr.yandex/${{ secrets.YC_REGISTRY_ID }}/ms-messenger-services:latest --platform=linux/amd64
 
       - name: Login to Yandex Cloud
         uses: docker/login-action@v3.0.0
@@ -58,13 +64,13 @@ jobs:
 
       - name: Push tag to Yandex Cloud
         run: |
-          docker push cr.yandex/${{ secrets.YC_REGISTRY_ID }}/ms-taskmanager-services:latest
+          docker push cr.yandex/${{ secrets.YC_REGISTRY_ID }}/ms-messenger-services:latest
 
 
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: [ build_and_push_taskmanager_service ]
+    needs: [ build_and_push_messenger_service ]
     steps:
       - name: Deploy serverless container
         uses: yc-actions/yc-sls-container-deploy@v1
@@ -72,13 +78,13 @@ jobs:
           yc-sa-json-credentials: ${{ secrets.YC_KEYS }}
           container-name: ${{ secrets.YC_CONTAINER_NAME }}
           folder-id: ${{ secrets.YC_FOLDER_ID }}
-          revision-image-url: cr.yandex/${{ secrets.YC_REGISTRY_ID }}/ms-taskmanager-services:latest
+          revision-image-url: cr.yandex/${{ secrets.YC_REGISTRY_ID }}/ms-messenger-services:latest
           revision-service-account-id: ${{ secrets.YC_SA_ID }}
           revision-env: |
             POSTGRES_URL=${{ secrets.ENV_POSTGRES_URL }}
 
-  build_and_push_randomquote_service:
-    name: Build and push randomquote service to DockerHub
+  build_and_push_admin_service:
+    name: Build and push admin service to DockerHub
     runs-on: ubuntu-latest
     needs: [ test ]
     steps:
@@ -86,7 +92,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          cd randomquote_service && docker build -f Dockerfile . -t ${{ secrets.DOCKER_USERNAME }}/ms-randomquote-services:latest
+          cd admin_service && docker build -f Dockerfile . -t ${{ secrets.DOCKER_USERNAME }}/ms-admin-services:latest
 
       - name: Login to DockerHub
         uses: docker/login-action@v3.0.0
@@ -96,4 +102,4 @@ jobs:
 
       - name: Push tag to docker hub
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/ms-randomquote-services:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/ms-admin-services:latest
