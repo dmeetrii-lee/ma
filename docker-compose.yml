@@ -1,0 +1,17 @@
+version: '3.9'
+
+services:
+
+  manager_service:
+    restart: on-failure
+    container_name: manager_service
+    build: manager_service/
+    ports:
+      - "8000:80"
+
+  messenger_service:
+    restart: on-failure
+    container_name: messenger_service
+    build: messenger_service/
+    ports:
+      - "8001:80"
