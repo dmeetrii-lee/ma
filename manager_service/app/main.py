@@ -5,6 +5,7 @@ from typing import Annotated
 
 from sqlalchemy.orm import Session
 
+
 from database import database as database
 from database.database import Message
 
