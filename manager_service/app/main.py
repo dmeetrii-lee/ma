@@ -39,19 +39,19 @@ async def get_messages(db: db_dependency):
         return "Cant access database!"
 
 
-@app.get("/get_message_by_sender")
-async def get_message_by_sender(name: str, db: db_dependency):
+@app.get("/get_messages_by_sender")
+async def get_messages_by_sender(name: str, db: db_dependency):
     try:
-        result = db.query(Message).filter(Message.sender_name == name).first()
+        result = db.query(Message).filter(Message.sender_name == name).all()
         return result
     except Exception as e:
         raise HTTPException(status_code=404, detail="Ticket not found")
     return result
 
-@app.get("/get_message_by_reciever")
-async def get_message_by_sender(name: str, db: db_dependency):
+@app.get("/get_messages_by_reciever")
+async def get_messages_by_sender(name: str, db: db_dependency):
     try:
-        result = db.query(Message).filter(Message.receiver_name == name).first()
+        result = db.query(Message).filter(Message.receiver_name == name).all()
         return result
     except Exception as e:
         raise HTTPException(status_code=404, detail="Ticket not found")

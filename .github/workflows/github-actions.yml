@@ -37,8 +37,8 @@ jobs:
         run: pytest tests/integration
 
 
-      # - name: Run component test
-      #   run: python component.py
+      - name: Run component test
+        run: pytest tests/component
 
 
       - name: Clean up (compose down)
@@ -83,8 +83,8 @@ jobs:
           revision-env: |
             POSTGRES_URL=${{ secrets.ENV_POSTGRES_URL }}
 
-  build_and_push_admin_service:
-    name: Build and push admin service to DockerHub
+  build_and_push_manager_service:
+    name: Build and push manager service to DockerHub
     runs-on: ubuntu-latest
     needs: [ test ]
     steps:
@@ -92,7 +92,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          cd admin_service && docker build -f Dockerfile . -t ${{ secrets.DOCKER_USERNAME }}/ms-admin-services:latest
+          cd manager_service && docker build -f Dockerfile . -t ${{ secrets.DOCKER_USERNAME }}/ms-manager-services:latest
 
       - name: Login to DockerHub
         uses: docker/login-action@v3.0.0
@@ -102,4 +102,4 @@ jobs:
 
       - name: Push tag to docker hub
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/ms-admin-services:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/ms-manager-services:latest
